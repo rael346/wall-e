@@ -10,6 +10,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 pico_sdk_init()
 add_executable(main
   main.c
+  motor.c
 )
 
 pico_enable_stdio_usb(main 1)
