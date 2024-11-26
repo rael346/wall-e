@@ -3,11 +3,13 @@
 #include <pico/stdio.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <tusb.h>
 
 #include "motor.h"
 #include "ultrasonic.h"
+#include "utils.h"
 
 #define GPIO_34EN 11
 #define GPIO_3A 13
@@ -19,6 +21,7 @@
 
 #define GPIO_ECHO 3
 #define GPIO_TRIG 5
+#define INPUT_BUF_SIZE 128
 
 MotorInfo leftMotor = {
     .pwmGPIO = GPIO_12EN,
@@ -39,9 +42,52 @@ UltrasonicInfo sensorInfo = {
 
 void core1_entry() {
   while (true) {
-    printf("%d cm\n", GetCm(&sensorInfo));
+    Logger(INFO, "%d", GetCm(&sensorInfo));
     sleep_ms(100);
   }
+}
+
+void handleMsg(char msg[INPUT_BUF_SIZE], MotorInfo* leftMotor,
+               MotorInfo* rightMotor) {
+  char buf[INPUT_BUF_SIZE] = {0};
+  strncpy(buf, msg, strlen(msg));
+
+  Logger(DEBUG, "buffer %s", buf);
+
+  char* curr = strtok(buf, " ");
+  if (curr == NULL) {
+    Logger(ERROR, "Missing left Motor direction");
+    return;
+  }
+  enum Direction leftMotorDirection = atoi(curr);
+  Logger(DEBUG, "Left Motor Direction %d", leftMotorDirection);
+
+  curr = strtok(NULL, " ");
+  if (curr == NULL) {
+    Logger(ERROR, "Missing Left Motor Speed");
+    return;
+  }
+  float leftMotorSpeed = atof(curr);
+  Logger(DEBUG, "Left Motor Speed %.2f", leftMotorSpeed);
+
+  curr = strtok(NULL, " ");
+  if (curr == NULL) {
+    Logger(ERROR, "Missing Right Motor Direction");
+    return;
+  }
+  enum Direction rightMotorDirection = atoi(curr);
+  Logger(DEBUG, "Right Motor Direction %d", rightMotorDirection);
+
+  curr = strtok(NULL, " ");
+  if (curr == NULL) {
+    Logger(ERROR, "Missing Right Motor Speed");
+    return;
+  }
+  float rightMotorSpeed = atof(curr);
+  Logger(DEBUG, "Right Motor Speed %.2f", rightMotorSpeed);
+
+  SetMotor(leftMotor, leftMotorDirection, leftMotorSpeed);
+  SetMotor(rightMotor, rightMotorDirection, rightMotorSpeed);
 }
 
 int main() {
@@ -49,65 +95,32 @@ int main() {
   while (!tud_cdc_connected()) {
     sleep_ms(100);
   }
-  printf("USB Connected\n");
 
   multicore_launch_core1(core1_entry);
 
-  /* MotorInit(&leftMotor); */
-  /* MotorInit(&rightMotor); */
-
-  char input[128] = {0};
-  int idx = 0;
-
+  MotorInit(&leftMotor);
+  MotorInit(&rightMotor);
   UltrasonicInit(&sensorInfo);
+  SetLogLevel(DEBUG);
+
+  char input[INPUT_BUF_SIZE] = {0};
+  int idx = 0;
   while (true) {
     char chr = getchar();
     if (chr == 13) {
-      printf("MSG: %s\n", input);
+      Logger(DEBUG, "input %s", input);
+      handleMsg(input, &leftMotor, &rightMotor);
       memset(input, 0, sizeof(input));
       idx = 0;
       continue;
     }
 
-    if (idx >= 128 - 1) {
-      printf("ERROR: input too large, press Enter now\n");
+    if (idx >= INPUT_BUF_SIZE - 1) {
+      Logger(ERROR, "input too large, end message now");
       continue;
     }
 
     input[idx] = chr;
     idx++;
   }
-}
-
-void runMotor(char user_input, MotorInfo* leftMotor, MotorInfo* rightMotor) {
-  if (user_input == '5') {
-    SetMotor(rightMotor, FORWARD, 0.5f);
-    printf("Right Motor forward\n");
-  }
-  if (user_input == '4') {
-    SetMotor(rightMotor, BACKWARD, 0.5f);
-    printf("Right Motor backward\n");
-  }
-
-  if (user_input == '3') {
-    SetMotor(rightMotor, STOP, 0.5f);
-    printf("Right Motor off\n");
-  }
-
-  if (user_input == '2') {
-    SetMotor(leftMotor, BACKWARD, 0.5f);
-    printf("Left Motor backward\n");
-  }
-
-  if (user_input == '1') {
-    SetMotor(leftMotor, FORWARD, 0.5f);
-    printf("Left Motor Forward\n");
-  }
-
-  if (user_input == '0') {
-    SetMotor(leftMotor, STOP, 0.5f);
-    printf("Left Motor off\n");
-  }
-
-  printf("Invalid input %c\n", user_input);
 }

@@ -10,9 +10,9 @@ typedef struct {
 } MotorInfo;
 
 enum Direction {
-  FORWARD,
-  STOP,
-  BACKWARD,
+  STOP = 0,
+  FORWARD = 1,
+  BACKWARD = 2,
 };
 
 void MotorInit(MotorInfo* info);

@@ -12,6 +12,7 @@ add_executable(${CMAKE_PROJECT_NAME}
   main.c
   motor.c
   ultrasonic.c
+  utils.c
 )
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
