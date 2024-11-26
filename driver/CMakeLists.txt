@@ -8,19 +8,20 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 pico_sdk_init()
-add_executable(main
+add_executable(${CMAKE_PROJECT_NAME}
   main.c
   motor.c
   ultrasonic.c
 )
 
-target_link_libraries(main
+target_link_libraries(${CMAKE_PROJECT_NAME}
   pico_stdlib
+  pico_multicore
   hardware_gpio
   hardware_pwm
   hardware_timer
 )
 
-pico_enable_stdio_usb(main 1)
-pico_enable_stdio_uart(main 0)
-pico_add_extra_outputs(main)
+pico_enable_stdio_usb(${CMAKE_PROJECT_NAME} 1)
+pico_enable_stdio_uart(${CMAKE_PROJECT_NAME} 0)
+pico_add_extra_outputs(${CMAKE_PROJECT_NAME})

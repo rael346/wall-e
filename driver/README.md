@@ -25,7 +25,7 @@ make -j4
 - Using picotool
 ```sh
 # inside the build folder
-picotool load main.uf2
+picotool load driver.uf2
 picotool reboot
 ```
 
@@ -46,7 +46,7 @@ ls /mnt/pico/
   INDEX.HTM INFO_UF2.TXT
 
 # Copy the uf2 into the pico
-sudo cp blink.uf2 /mnt/pico
+sudo cp driver.uf2 /mnt/pico
 sudo sync
 
 # Unmount the pico

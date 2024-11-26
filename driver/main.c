@@ -1,11 +1,12 @@
 #include <hardware/gpio.h>
+#include <pico/multicore.h>
+#include <pico/stdio.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <tusb.h>
 
 #include "motor.h"
-#include "pico/stdio.h"
 #include "ultrasonic.h"
 
 #define GPIO_34EN 11
@@ -31,6 +32,18 @@ MotorInfo rightMotor = {
     .backGPIO = GPIO_3A,
 };
 
+UltrasonicInfo sensorInfo = {
+    .echoGPIO = GPIO_ECHO,
+    .trigGPIO = GPIO_TRIG,
+};
+
+void core1_entry() {
+  while (true) {
+    printf("%d cm\n", GetCm(&sensorInfo));
+    sleep_ms(100);
+  }
+}
+
 int main() {
   stdio_init_all();
   while (!tud_cdc_connected()) {
@@ -38,36 +51,31 @@ int main() {
   }
   printf("USB Connected\n");
 
+  multicore_launch_core1(core1_entry);
+
   /* MotorInit(&leftMotor); */
   /* MotorInit(&rightMotor); */
 
-  /* char input[128] = {0}; */
-  /* int idx = 0; */
-
-  UltrasonicInfo sensorInfo = {
-      .echoGPIO = GPIO_ECHO,
-      .trigGPIO = GPIO_TRIG,
-  };
+  char input[128] = {0};
+  int idx = 0;
 
   UltrasonicInit(&sensorInfo);
   while (true) {
-    printf("\n %d cm", GetCm(&sensorInfo));
-    sleep_ms(100);
-    /* char chr = getchar(); */
-    /* if (chr == 13) { */
-    /*   printf("MSG: %s\n", input); */
-    /*   memset(input, 0, sizeof(input)); */
-    /*   idx = 0; */
-    /*   continue; */
-    /* } */
-    /**/
-    /* if (idx >= 128) { */
-    /*   printf("ERROR: input too large, press Enter now\n"); */
-    /*   continue; */
-    /* } */
-    /**/
-    /* input[idx] = chr; */
-    /* idx++; */
+    char chr = getchar();
+    if (chr == 13) {
+      printf("MSG: %s\n", input);
+      memset(input, 0, sizeof(input));
+      idx = 0;
+      continue;
+    }
+
+    if (idx >= 128 - 1) {
+      printf("ERROR: input too large, press Enter now\n");
+      continue;
+    }
+
+    input[idx] = chr;
+    idx++;
   }
 }
 
