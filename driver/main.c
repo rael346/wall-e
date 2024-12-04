@@ -1,8 +1,7 @@
 #include <hardware/gpio.h>
-#include <pico/multicore.h>
+#include <pico/error.h>
 #include <pico/stdio.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <tusb.h>
@@ -10,6 +9,8 @@
 #include "motor.h"
 #include "ultrasonic.h"
 #include "utils.h"
+
+#define MSG_BUF_SIZE 128
 
 #define GPIO_34EN 11
 #define GPIO_3A 13
@@ -21,7 +22,6 @@
 
 #define GPIO_ECHO 3
 #define GPIO_TRIG 5
-#define INPUT_BUF_SIZE 128
 
 MotorInfo leftMotor = {
     .pwmGPIO = GPIO_12EN,
@@ -40,19 +40,10 @@ UltrasonicInfo sensorInfo = {
     .trigGPIO = GPIO_TRIG,
 };
 
-void core1_entry() {
-  while (true) {
-    Logger(INFO, "%d", GetCm(&sensorInfo));
-    sleep_ms(100);
-  }
-}
-
-void handleMsg(char msg[INPUT_BUF_SIZE], MotorInfo* leftMotor,
+void handleMsg(char msg[MSG_BUF_SIZE + 1], MotorInfo* leftMotor,
                MotorInfo* rightMotor) {
-  char buf[INPUT_BUF_SIZE] = {0};
+  char buf[MSG_BUF_SIZE + 1] = {0};
   strncpy(buf, msg, strlen(msg));
-
-  Logger(DEBUG, "buffer %s", buf);
 
   char* curr = strtok(buf, " ");
   if (curr == NULL) {
@@ -96,31 +87,37 @@ int main() {
     sleep_ms(100);
   }
 
-  multicore_launch_core1(core1_entry);
+  SetLogLevel(DEBUG);
+  Logger(DEBUG, "Connected");
 
   MotorInit(&leftMotor);
   MotorInit(&rightMotor);
   UltrasonicInit(&sensorInfo);
-  SetLogLevel(DEBUG);
 
-  char input[INPUT_BUF_SIZE] = {0};
+  char msgBuf[MSG_BUF_SIZE + 1] = {0};
   int idx = 0;
   while (true) {
-    char chr = getchar();
-    if (chr == 13) {
-      Logger(DEBUG, "input %s", input);
-      handleMsg(input, &leftMotor, &rightMotor);
-      memset(input, 0, sizeof(input));
+    Logger(INFO, "%d", GetCm(&sensorInfo));
+
+    int chr = getchar_timeout_us(100000);
+    if (chr == PICO_ERROR_TIMEOUT) {
+      continue;
+    }
+
+    if (chr == '\n') {
+      Logger(DEBUG, "Received msg %s", msgBuf);
+      handleMsg(msgBuf, &leftMotor, &rightMotor);
+      memset(msgBuf, '\0', MSG_BUF_SIZE);
       idx = 0;
       continue;
     }
 
-    if (idx >= INPUT_BUF_SIZE - 1) {
-      Logger(ERROR, "input too large, end message now");
+    if (idx >= MSG_BUF_SIZE) {
+      Logger(DEBUG, "Received msg %s", msgBuf);
+      Logger(ERROR, "input too large, missing newline character");
       continue;
     }
 
-    input[idx] = chr;
-    idx++;
+    msgBuf[idx++] = chr;
   }
 }
