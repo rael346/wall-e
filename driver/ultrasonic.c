@@ -13,6 +13,11 @@ void UltrasonicInit(UltrasonicInfo* info) {
   gpio_set_dir(info->echoGPIO, GPIO_IN);
 }
 
+void UltrasonicDeinit(UltrasonicInfo* info) {
+  gpio_deinit(info->trigGPIO);
+  gpio_deinit(info->echoGPIO);
+}
+
 int timeout = 26100;
 
 // taken from https://github.com/Thomas-Kleist/Pico-Ultrasonic

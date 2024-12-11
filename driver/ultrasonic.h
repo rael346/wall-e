@@ -9,6 +9,7 @@ typedef struct {
 } UltrasonicInfo;
 
 void UltrasonicInit(UltrasonicInfo* info);
+void UltrasonicDeinit(UltrasonicInfo* info);
 
 int GetCm(UltrasonicInfo* info);
 
