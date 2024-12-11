@@ -1,21 +1,38 @@
 #include "state.h"
 
+#include "utils.h"
+
 typedef struct {
-  enum State curr_state;
-  int curr_dist;
+  enum State currState;
+  enum State prevState;
+  int currDist;
 } state;
 
 state s = {
-    .curr_state = FORWARD,
-    .curr_dist = -1,
+    .currState = FORWARD,
+    .prevState = FORWARD,
+    .currDist = -1,
 };
 
-void SetDist(int new_dist) {
-  if (new_dist < 10 && s.curr_dist > 10) {
-    s.curr_state = STOP;
+void SetDist(int newDist) {
+  if (s.currState == FORWARD && newDist < 10 && s.currDist >= 10) {
+    Logger(DEBUG, "See a wall");
+    SetCurrState(STOP);
   }
 
-  s.curr_dist = new_dist;
+  if (s.currState == SPIN && newDist > 10 && s.currDist <= 10) {
+    Logger(DEBUG, "No wall seen");
+    SetCurrState(STOP);
+  }
+
+  s.currDist = newDist;
 }
 
-enum State GetState() { return s.curr_state; }
+enum State GetCurrState() { return s.currState; }
+
+enum State GetPrevState() { return s.prevState; }
+
+void SetCurrState(enum State newState) {
+  s.prevState = s.currState;
+  s.currState = newState;
+}

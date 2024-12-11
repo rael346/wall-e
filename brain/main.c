@@ -1,10 +1,7 @@
-#include <errno.h>
 #include <signal.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <unistd.h>
 
 #include "serial.h"
@@ -25,7 +22,7 @@ void handleMsg(char msg[MSG_BUF_SIZE + 1]) {
       Logger(DEBUG, "(pico error) %s", buf);
       break;
     case 'i':
-      Logger(DEBUG, "(pico info ) %s", buf);
+      Logger(DEBUG, "(pico info) %s", buf);
       SetDist(atoi(buf));
       break;
     case 'd':
@@ -33,13 +30,32 @@ void handleMsg(char msg[MSG_BUF_SIZE + 1]) {
       break;
   }
 
-  enum State s = GetState();
-  if (s == FORWARD) {
-    WriteMsg("1 0.5 1 0.5");
+  enum State currState = GetCurrState();
+  enum State prevState = GetPrevState();
+
+  if (prevState == FORWARD && currState == STOP) {
+    Logger(DEBUG, "STOP before a wall");
+    WriteMsg("0 0 0 0");
+    SetCurrState(SPIN);
   }
 
-  if (s == STOP) {
+  if (prevState == STOP && currState == SPIN) {
+    Logger(DEBUG, "SPIN to a new direction");
+    WriteMsg("1 1 2 1");
+    SetCurrState(SPIN);
+    usleep(500 * 1000);
+  }
+
+  if (prevState == SPIN && currState == STOP) {
+    Logger(DEBUG, "STOP before a new direction");
     WriteMsg("0 0 0 0");
+    SetCurrState(FORWARD);
+  }
+
+  if (prevState == STOP && currState == FORWARD) {
+    Logger(DEBUG, "FORWARD to the new direction");
+    WriteMsg("1 1 1 1");
+    SetCurrState(FORWARD);
   }
 }
 
@@ -47,6 +63,7 @@ int main() {
   ConfigSerial();
   SetLogLevel(DEBUG);
 
+  WriteMsg("1 1 1 1");
   char msgBuf[MSG_BUF_SIZE + 1] = {};
   int idx = 0;
   while (!signal_received) {
@@ -57,7 +74,7 @@ int main() {
     }
 
     if (c == '\n') {
-      Logger(DEBUG, "received %s", msgBuf);
+      /* Logger(DEBUG, "received %s", msgBuf); */
       handleMsg(msgBuf);
 
       idx = 0;
@@ -74,7 +91,6 @@ int main() {
     msgBuf[idx++] = c;
   }
 
-  WriteMsg("0 0 0 0");
   CloseSerial();
   return 0;
 }

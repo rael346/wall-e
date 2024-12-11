@@ -7,8 +7,12 @@ enum State {
   SPIN,
 };
 
-void SetDist(int new_dist); 
+void SetDist(int newDist); 
 
-enum State GetState(); 
+enum State GetCurrState();
+
+enum State GetPrevState();
+
+void SetCurrState(enum State newState);
 
 #endif
