@@ -1,17 +1,18 @@
-.PHONY: brain/build
+.PHONY: brain/build brain/run brain/clean 
 brain/build:
-	$(MAKE) -C ./brain/ build
+	$(MAKE) -C ./brain/
 
-.PHONY: brain/run
 brain/run:
 	$(MAKE) -C ./brain/ run
 
-.PHONY: driver/build
+brain/clean:
+	$(MAKE) -C ./brain/ clean
+
+.PHONY: driver/build driver/reboot
 driver/build:
 	cd ./driver/build/ && cmake ..
 	$(MAKE) -C ./driver/build/ -j4
-	picotool load driver.uf2 -f
+	picotool load ./driver/build/driver.uf2 -f
 
-.PHONY: driver/reboot
 driver/reboot:
 	picotool reboot -f

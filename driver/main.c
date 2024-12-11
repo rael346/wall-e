@@ -42,7 +42,7 @@ UltrasonicInfo sensorInfo = {
 
 void handleMsg(char msg[MSG_BUF_SIZE + 1], MotorInfo* leftMotor,
                MotorInfo* rightMotor) {
-  char buf[MSG_BUF_SIZE + 1] = {0};
+  char buf[MSG_BUF_SIZE + 1] = {};
   strncpy(buf, msg, strlen(msg));
 
   char* curr = strtok(buf, " ");
@@ -94,7 +94,7 @@ int main() {
   MotorInit(&rightMotor);
   UltrasonicInit(&sensorInfo);
 
-  char msgBuf[MSG_BUF_SIZE + 1] = {0};
+  char msgBuf[MSG_BUF_SIZE + 1] = {};
   int idx = 0;
   while (true) {
     Logger(INFO, "%d", GetCm(&sensorInfo));
@@ -104,7 +104,7 @@ int main() {
       continue;
     }
 
-    if (chr == '\n') {
+    if (chr == '\r') {
       Logger(DEBUG, "Received msg %s", msgBuf);
       handleMsg(msgBuf, &leftMotor, &rightMotor);
       memset(msgBuf, '\0', MSG_BUF_SIZE);

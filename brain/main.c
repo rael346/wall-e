@@ -1,82 +1,63 @@
 #include <errno.h>
-#include <fcntl.h>
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <termios.h>
+#include <sys/types.h>
 #include <unistd.h>
 
+#include "serial.h"
+#include "state.h"
 #include "utils.h"
 
 #define MSG_BUF_SIZE 128
 
-// config the serial port behavior (since the defaults are not good)
-// https://blog.mbedded.ninja/programming/operating-systems/linux/linux-serial-ports-using-c-cpp/
-int configSerialPort() {
-  int serialPort = open("/dev/ttyACM0", O_RDWR);
-
-  struct termios tty;
-  AssertErr(tcgetattr(serialPort, &tty));
-  tty.c_cflag &= ~PARENB;
-  tty.c_cflag &= ~CSTOPB;
-  tty.c_cflag &= ~CSIZE;
-  tty.c_cflag |= CS8;
-  tty.c_cflag &= ~CRTSCTS;
-  tty.c_cflag |= CREAD | CLOCAL;
-  tty.c_lflag &= ~ICANON;
-  tty.c_lflag &= ~ECHO;
-  tty.c_lflag &= ~ECHOE;
-  tty.c_lflag &= ~ECHONL;
-  tty.c_lflag &= ~ISIG;
-  tty.c_iflag &= ~(IXON | IXOFF | IXANY);
-  tty.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL);
-  tty.c_oflag &= ~OPOST;
-  tty.c_oflag &= ~ONLCR;
-  tty.c_cc[VTIME] = 10;
-  tty.c_cc[VMIN] = 0;
-  cfsetspeed(&tty, B115200);
-  AssertErr(tcsetattr(serialPort, TCSANOW, &tty));
-
-  return serialPort;
-}
+volatile sig_atomic_t signal_received = 0;
+void sigint_handler(int signal) { signal_received = signal; }
 
 void handleMsg(char msg[MSG_BUF_SIZE + 1]) {
-  char buf[MSG_BUF_SIZE + 1] = {};
-  strncpy(buf, msg, strlen(msg));
+  char buf[MSG_BUF_SIZE + 1 - 2] = {};
+  strncpy(buf, msg + 2, strlen(msg));
 
-  switch (buf[0]) {
+  switch (msg[0]) {
     case 'e':
-      Logger(ERROR, "(pico) %s", buf + 2);
+      Logger(DEBUG, "(pico error) %s", buf);
       break;
     case 'i':
-      Logger(INFO, "(pico) %s", buf + 2);
+      Logger(DEBUG, "(pico info ) %s", buf);
+      SetDist(atoi(buf));
       break;
     case 'd':
-      Logger(DEBUG, "(pico) %s", buf + 2);
+      Logger(DEBUG, "(pico debug) %s", buf);
       break;
+  }
+
+  enum State s = GetState();
+  if (s == FORWARD) {
+    WriteMsg("1 0.5 1 0.5");
+  }
+
+  if (s == STOP) {
+    WriteMsg("0 0 0 0");
   }
 }
 
 int main() {
-  int serialPort = configSerialPort();
+  ConfigSerial();
   SetLogLevel(DEBUG);
 
   char msgBuf[MSG_BUF_SIZE + 1] = {};
   int idx = 0;
-  while (true) {
+  while (!signal_received) {
     char c;
-    int numBytes = read(serialPort, &c, 1);
-    if (numBytes < 0) {
-      Logger(ERROR, "Error reading serial port, %s", strerror(errno));
-      continue;
-    }
-
+    ssize_t numBytes = ReadChar(&c);
     if (numBytes == 0) {
       continue;
     }
 
     if (c == '\n') {
-      Logger(DEBUG, "Received msg %s", msgBuf);
+      Logger(DEBUG, "received %s", msgBuf);
       handleMsg(msgBuf);
 
       idx = 0;
@@ -85,7 +66,7 @@ int main() {
     }
 
     if (idx >= MSG_BUF_SIZE) {
-      Logger(DEBUG, "Received msg %s", msgBuf);
+      Logger(DEBUG, "received %s", msgBuf);
       Logger(ERROR, "input too large, missing newline character");
       continue;
     }
@@ -93,6 +74,7 @@ int main() {
     msgBuf[idx++] = c;
   }
 
-  close(serialPort);
+  WriteMsg("0 0 0 0");
+  CloseSerial();
   return 0;
 }

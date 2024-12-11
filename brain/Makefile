@@ -1,7 +1,27 @@
-CC=gcc
+TARGET = brain
+LIBS = 
+CC = gcc
+CFLAGS = -Wall -Wextra
 
-build: main.c utils.c utils.h
-	$(CC) -Wall -Wextra main.c utils.c -o brain
+.PHONY: default all clean run
+
+default: $(TARGET)
+all: default
+
+OBJECTS := $(patsubst %.c, %.o, $(wildcard *.c))
+HEADERS := $(wildcard *.h)
+
+%.o: %.c $(HEADERS)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+.PRECIOUS: $(TARGET) $(OBJECTS)
+
+$(TARGET): $(OBJECTS)
+	$(CC) $(OBJECTS) -Wall $(LIBS) -o $@
+
+clean:
+	-rm -f *.o
+	-rm -f $(TARGET)
 
 run:
 	./brain
