@@ -23,18 +23,23 @@
 ![High Level Design Diagram](diag_high_level_design.png)
 
 - Two main components:
-    - Motor Driver (Pico): controls the speed and direction of the two motors as well as the ultrasonic sensor
+    - Motor Controller (Pico): controls the speed and direction of the two motors as well as the ultrasonic sensor
     - Brain (Pi 5): sending commands to the motors and getting feedback from the ultrasonic sensors through the motor controller
     - The Pi 5 and Pico talks to each other through USB serial communication
 
-### Motor Controller
+### Motor Controller 
 
-[Insert Motor Controller Diagram]
+![Motor Controller Diagram](diag_motor_controller.png)
+
+![Motor Driver Diagram](diag_l293d.png)
+
+![Motor Driver Diagram](diag_ultrasonic.png)
 
 - Pico: 
     - Sends PWM signals to the Motor Driver    
     - Gets the readings from the ultrasonic sensor
-- Motor Controller (L293D): 
+
+- Motor Driver (L293D): 
     - Connects the power supply to the motors (protects the pico as well) 
     - Connects to the pico to control the motors' speed and direction
 - Motors: 4-6V DC motors in micro-servo body, no encoders
@@ -42,6 +47,8 @@
 - Ultrasonic sensor: detects the distance, in centimeteres, from the front of the rover to the nearest object
 
 ### Brain
+
+![Motor Driver Diagram](diag_brain_state_machine.png)
 
 - Pi 5: Communicate serially with the Pico 
 - Pi Camera Module 3: 
