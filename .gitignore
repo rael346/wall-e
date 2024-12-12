@@ -2,3 +2,4 @@ driver/.cache
 driver/build
 brain/brain
 brain/*.o
+.DS_Store
