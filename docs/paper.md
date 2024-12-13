@@ -3,19 +3,19 @@
 ## Intro
 
 ### What 
-- Building a rover from scratch that can avoid walls
-- Bonus if I can integrate AI vision capabilities
+- Build a rover from scratch that can evade walls, re-using parts from the old rover
+- (Bonus) Integrate AI vision capabilities
 
 ### Why
-- Got the rover from a previous students
+- Got the rover from a previous student
 - Wanted to extend on the work by adding vision capabilities
-- The AI kit would cover the GPIO, so the previous design wouldn't work
-- Building from scratch will be faster
-- Learn the most from just building stuff from scratch 
+- The AI kit would use all of the the GPIOs from the Pi 5, which won't work with the previous design since it used some of the GPIOs
+- Decided to use the Pico to expose the GPIOs instead, and communicate with the Pi 5 through USB serial
+- Since most of the code will probably be different, might as well re-design the rover
 
 ### How
 - Discuss the high-level design of each components in the rover and how they interact with each other
-- Discuss the build process from start to finish 
+- Discuss the build process for each components and some of the challenges during the process
 - Discuss the results after the build and future improvements
 
 ## Design
@@ -33,12 +33,11 @@
 
 ![Motor Driver Diagram](diag_l293d.png)
 
-![Motor Driver Diagram](diag_ultrasonic.png)
+![Motor Ultrasonic Diagram](diag_ultrasonic.png)
 
 - Pico: 
     - Sends PWM signals to the Motor Driver    
     - Gets the readings from the ultrasonic sensor
-
 - Motor Driver (L293D): 
     - Connects the power supply to the motors (protects the pico as well) 
     - Connects to the pico to control the motors' speed and direction
@@ -50,10 +49,14 @@
 
 ![Motor Driver Diagram](diag_brain_state_machine.png)
 
-- Pi 5: Communicate serially with the Pico 
+- Pi 5: controls the rover through the Pico, communicate through serial USB 
 - Pi Camera Module 3: 
     - Originally planned to have computer vision capabilities, but didn't have enough time
     - Record the front of the rover for now
+- Simple state machine for wall-evading behavior 
+    - Go forward by default
+    - If encounter a wall, Stop and spin around
+    - If the sensor no longer see a wall, stop spinning and go forward again
 
 ### Serial Communication
 
@@ -113,11 +116,17 @@
 ## Future Work
 
 ### Hardware
-- Bigger chassis: There was barely enough space to cram in enough technologies, and the motors can barely carry all the weight. I have to use 5V to the motors for the rover to be able to turn 
-- Stronger motors with encoders: knowing the amount of rotation that a motor has done is important for angle turn accuracy
-- Lidar sensor: ultrasonic sensor is inherently inaccurate and dependent on the object around it (some object reflect sounds better) while not being flexible for getting envronment info. Lidar sensor can alleviate these problems as a 360-degree sensor with higher accuracy and range. Ultrasonic can still be used for notifying that the rover is approaching an obstacle.  
+- **Bigger chassis**: There was barely enough space to cram in enough technologies, and the motors can barely carry all the weight. I have to use 5V to the motors for the rover to be able to turn 
+- **Stronger motors with encoders**: knowing the amount of rotation that a motor has done is important for angle turn accuracy
+- **Lidar sensor**: ultrasonic sensor is inherently inaccurate and dependent on the object around it (some object reflect sounds better) while not being flexible for getting envronment info. Lidar sensor can alleviate these problems as a 360-degree sensor with higher accuracy and range. Ultrasonic can still be used for notifying that the rover is approaching an obstacle.  
+- **Using ball-bearing caster wheel instead of the regular caster wheel**: 
+    - With the current caster wheel, the rover doesn't go straight when it is supposed to since the wheel doesn't stay straight during movement
+    - The old rover mitigated this problem by using some metal wires to hold the wheel in place
+    - This solution doesn't work anymore with the current design because of the weight of the rover (the rover couldn't turn because of the friction caused by the extra weight on the wheel)
+    - Ball-bearing wheel will solve this problem since it is omnidirectional
 
 ### Software
 
-- Object detection model in the camera: original goal
+- Object detection model in the camera: The original goal of the project. Integrating the camera with the AI kit can add object detection capabilities to the rover 
+
 - ROS for SLAM: using ROS will allow the rover to use libraries built for SLAM (Simultaneous Localization and Mapping), which basically add roomba capabilities to the rover (without the cleaning part).
