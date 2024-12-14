@@ -3,6 +3,10 @@
 
 ## Demo
 
+https://github.com/user-attachments/assets/5d728668-df3b-49ff-8af7-fae13c4f263e
+
+https://github.com/user-attachments/assets/933dd85c-a1db-4a21-8435-bca50764d21d
+
 ## Components
 - Raspberry Pi 5 - The brain of the rover
 - Raspberry Pi Pico - The Motor Controller
