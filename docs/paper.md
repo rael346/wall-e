@@ -111,7 +111,9 @@
 
 ## Result
 
-[Insert Demo Video]
+https://github.com/user-attachments/assets/2b47af32-e938-46c8-bf05-5c01ad9a1a56
+
+https://github.com/user-attachments/assets/11035bda-4b40-4fa7-ac53-a15818a046b6
 
 ## Future Work
 
