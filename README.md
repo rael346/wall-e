@@ -3,6 +3,8 @@
 
 ![](docs/result_after.jpg)
 
+[Journey building the rover](docs/paper.md)
+
 ## Demo
 
 https://github.com/user-attachments/assets/5d728668-df3b-49ff-8af7-fae13c4f263e
