@@ -1,6 +1,8 @@
 # WALL-E 
 > A Wall-Evading rover
 
+![](docs/result_after.jpg)
+
 ## Demo
 
 https://github.com/user-attachments/assets/5d728668-df3b-49ff-8af7-fae13c4f263e
