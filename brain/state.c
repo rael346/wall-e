@@ -15,11 +15,13 @@ state s = {
 };
 
 void SetDist(int newDist) {
+  // see a wall
   if (s.currState == FORWARD && newDist < 10 && s.currDist >= 10) {
     Logger(DEBUG, "See a wall");
     SetCurrState(STOP);
   }
 
+  // doesn't see a wall anymore
   if (s.currState == SPIN && newDist > 10 && s.currDist <= 10) {
     Logger(DEBUG, "No wall seen");
     SetCurrState(STOP);

@@ -40,6 +40,7 @@ UltrasonicInfo sensorInfo = {
     .trigGPIO = GPIO_TRIG,
 };
 
+// parse the message into the correct format for the motors
 void handleMsg(char msg[MSG_BUF_SIZE + 1], MotorInfo* leftMotor,
                MotorInfo* rightMotor) {
   char buf[MSG_BUF_SIZE + 1] = {};
