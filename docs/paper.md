@@ -116,7 +116,7 @@
 ## Future Work
 
 ### Hardware
-- **Bigger chassis**: There was barely enough space to cram in enough technologies, and the motors can barely carry all the weight. I have to use 5V to the motors for the rover to be able to turn 
+- **Bigger chassis**: There was barely enough space to cram in enough technologies, and the motors can barely carry all the weight. I have to use 5V to the motors for the rover to be able to turn. The Pi 5 also requires 5V, 5A power supply now instead of the 5V, 3A power with the Pi 4. 
 - **Stronger motors with encoders**: knowing the amount of rotation that a motor has done is important for angle turn accuracy
 - **Lidar sensor**: ultrasonic sensor is inherently inaccurate and dependent on the object around it (some object reflect sounds better) while not being flexible for getting envronment info. Lidar sensor can alleviate these problems as a 360-degree sensor with higher accuracy and range. Ultrasonic can still be used for notifying that the rover is approaching an obstacle.  
 - **Using ball-bearing caster wheel instead of the regular caster wheel**: 
